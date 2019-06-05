@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/url"
 	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -89,7 +90,7 @@ func runTests(event cloudevents.Event, shkeptncontext string, data deploymentFin
 
 	id := uuid.New().String()
 
-	var res = true
+	var res bool
 	res, err = runHealthCheck(data, id)
 	if err != nil {
 		utils.Error(shkeptncontext, err.Error())
@@ -109,6 +110,7 @@ func runTests(event cloudevents.Event, shkeptncontext string, data deploymentFin
 			utils.Error(shkeptncontext, err.Error())
 			return
 		}
+		utils.Info(shkeptncontext, "Functional test result ="+strconv.FormatBool(res))
 
 	case "performance":
 		res, err = runPerformanceCheck(data, id)
@@ -116,6 +118,7 @@ func runTests(event cloudevents.Event, shkeptncontext string, data deploymentFin
 			utils.Error(shkeptncontext, err.Error())
 			return
 		}
+		utils.Info(shkeptncontext, "Performance test result ="+strconv.FormatBool(res))
 
 	default:
 		utils.Error(shkeptncontext, "Unknown test strategy '"+data.TestStrategy+"'")
@@ -132,7 +135,7 @@ func runTests(event cloudevents.Event, shkeptncontext string, data deploymentFin
 	}
 }
 
-func runHealthCheck(data deploymentFinishedEvent, id string) (bool, error) {
+func runHealthCheck(shkeptncontext string, data deploymentFinishedEvent, id string) (bool, error) {
 	switch strings.ToLower(data.DeploymentStrategy) {
 	case "direct":
 		if err := utils.CheckDeploymentRolloutStatus(data.Service, data.Project+"-"+data.Stage); err != nil {
@@ -155,23 +158,23 @@ func runHealthCheck(data deploymentFinishedEvent, id string) (bool, error) {
 	os.RemoveAll("HealthCheck_" + data.Service + "_result.tlf")
 	os.RemoveAll("output.txt")
 
-	return executeJMeter(data.Service+"/jmeter/basiccheck.jmx", "HealthCheck_"+data.Service,
+	return executeJMeter(shkeptncontext, data.Service+"/jmeter/basiccheck.jmx", "HealthCheck_"+data.Service,
 		data.Service+"."+data.Project+"-"+data.Stage, 80, "/health", 1, 1, 250, "HealthCheck_"+id,
 		true, 0)
 }
 
-func runFunctionalCheck(data deploymentFinishedEvent, id string) (bool, error) {
+func runFunctionalCheck(shkeptncontext string, data deploymentFinishedEvent, id string) (bool, error) {
 
 	os.RemoveAll("FuncCheck_" + data.Service)
 	os.RemoveAll("FuncCheck_" + data.Service + "_result.tlf")
 	os.RemoveAll("output.txt")
 
-	return executeJMeter(data.Service+"/jmeter/"+data.Service+"_load.jmx",
+	return executeJMeter(shkeptncontext, data.Service+"/jmeter/"+data.Service+"_load.jmx",
 		"FuncCheck_"+data.Service, data.Service+"."+data.Project+"-"+data.Stage+".svc.cluster.local",
 		80, "/health", 1, 1, 250, "FuncCheck_"+id, true, 0)
 }
 
-func runPerformanceCheck(data deploymentFinishedEvent, id string) (bool, error) {
+func runPerformanceCheck(shkeptncontext string, data deploymentFinishedEvent, id string) (bool, error) {
 
 	os.RemoveAll("PerfCheck_" + data.Service)
 	os.RemoveAll("PerfCheck_" + data.Service + "_result.tlf")
@@ -182,7 +185,7 @@ func runPerformanceCheck(data deploymentFinishedEvent, id string) (bool, error) 
 		return false, err
 	}
 
-	return executeJMeter(data.Service+"/jmeter/"+data.Service+"_load.jmx", "PerfCheck_"+data.Service,
+	return executeJMeter(shkeptncontext, data.Service+"/jmeter/"+data.Service+"_load.jmx", "PerfCheck_"+data.Service,
 		data.Service+"."+data.Project+"-"+data.Stage+"."+gateway, 80, "/health", 10, 500, 250, "PerfCheck_"+id,
 		false, 0)
 }

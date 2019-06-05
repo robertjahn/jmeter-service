@@ -11,7 +11,7 @@ import (
 	"github.com/keptn/go-utils/pkg/utils"
 )
 
-func executeJMeter(scriptName string, resultsDir string, serverURL string, serverPort int, checkPath string, vuCount int,
+func executeJMeter(shkeptncontext string, scriptName string, resultsDir string, serverURL string, serverPort int, checkPath string, vuCount int,
 	loopCount int, thinkTime int, LTN string, funcValidation bool, avgRtValidation int) (bool, error) {
 
 	os.RemoveAll(resultsDir)
@@ -48,6 +48,7 @@ func executeJMeter(scriptName string, resultsDir string, serverURL string, serve
 	}
 
 	if funcValidation && errorCount > 0 {
+		utils.Debug(shkeptncontext, fmt.Sprintf("Function validation failed because we got %d errors.", errorCount))
 		return false, nil
 	}
 
@@ -57,9 +58,11 @@ func executeJMeter(scriptName string, resultsDir string, serverURL string, serve
 	}
 
 	if avgRtValidation > 0 && avg > avgRtValidation {
+		utils.Debug(shkeptncontext, fmt.Sprintf("Avg rt validation failed because we got an avg rt of %d", avgRtValidation))
 		return false, nil
 	}
 
+	utils.Debug(shkeptncontext, "Successfully executed JMeter test")
 	return true, nil
 }
 
