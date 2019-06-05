@@ -3,6 +3,8 @@ kind: Service
 metadata:
   name: jmeter-service
   namespace: keptn
+  labels:
+    serving.knative.dev/visibility: cluster-local
 spec:
   runLatest:
     configuration:
@@ -18,7 +20,7 @@ spec:
 apiVersion: eventing.knative.dev/v1alpha1
 kind: Subscription
 metadata:
-  name: jmeter-deployment-finished-changed
+  name: jmeter-service-deployment-finished-subscription
   namespace: keptn
 spec:
   channel:
