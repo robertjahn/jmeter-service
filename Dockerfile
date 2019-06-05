@@ -19,8 +19,32 @@ RUN CGO_ENABLED=0 GOOS=linux go build -v -o jmeter-service
 
 # Use a Docker multi-stage build to create a lean production image.
 # https://docs.docker.com/develop/develop-images/multistage-build/#use-multi-stage-builds
-FROM justb4/jmeter:5.1.1
-RUN apk add --no-cache ca-certificates
+FROM alpine
+
+ARG JMETER_VERSION="5.1.1"
+ENV JMETER_HOME /opt/apache-jmeter-${JMETER_VERSION}
+ENV	JMETER_BIN	${JMETER_HOME}/bin
+ENV	JMETER_DOWNLOAD_URL  https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-${JMETER_VERSION}.tgz
+
+# Install extra packages
+# See https://github.com/gliderlabs/docker-alpine/issues/136#issuecomment-272703023
+# Change TimeZone TODO: TZ still is not set!
+ARG TZ="Europe/Amsterdam"
+RUN    apk update \
+	&& apk upgrade \
+	&& apk add ca-certificates \
+	&& update-ca-certificates \
+	&& apk add --update openjdk8-jre tzdata curl unzip bash \
+	&& apk add --no-cache nss \
+	&& rm -rf /var/cache/apk/* \
+	&& mkdir -p /tmp/dependencies  \
+	&& curl -L --silent ${JMETER_DOWNLOAD_URL} >  /tmp/dependencies/apache-jmeter-${JMETER_VERSION}.tgz  \
+	&& mkdir -p /opt  \
+	&& tar -xzf /tmp/dependencies/apache-jmeter-${JMETER_VERSION}.tgz -C /opt  \
+	&& rm -rf /tmp/dependencies
+
+# Set global PATH such that "jmeter" command is found
+ENV PATH $PATH:$JMETER_BIN
 
 ARG KUBE_VERSION=1.14.1
 RUN wget -q https://storage.googleapis.com/kubernetes-release/release/v$KUBE_VERSION/bin/linux/amd64/kubectl -O /bin/kubectl && \
