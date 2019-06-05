@@ -90,7 +90,7 @@ func runTests(event cloudevents.Event, shkeptncontext string, data deploymentFin
 	id := uuid.New().String()
 
 	var res = true
-	// res, err = runHealthCheck(data, id)
+	res, err = runHealthCheck(data, id)
 	if err != nil {
 		utils.Error(shkeptncontext, err.Error())
 		return
