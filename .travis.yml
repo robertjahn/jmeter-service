@@ -5,7 +5,7 @@ go:
 - 1.12.x
 services:
 - docker
-env:
+env: 
   global:
     - DEP_VERSION="0.5.3"
 before_install:
