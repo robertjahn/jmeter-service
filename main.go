@@ -9,7 +9,6 @@ import (
 	"os"
 	"strconv"
 	"strings"
-	"time"
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
@@ -43,16 +42,6 @@ type deploymentFinishedEvent struct {
 	Service            string `json:"service"`
 	Image              string `json:"image"`
 	Tag                string `json:"tag"`
-}
-
-type testFinishedEvent struct {
-	Data      interface{}
-	StartDate time.Time `json:"startdate"`
-}
-
-type evaluationDoneEvent struct {
-	Data             interface{}
-	EvaluationPassed bool `json:"evaluationpassed"`
 }
 
 func gotEvent(ctx context.Context, event cloudevents.Event) error {
@@ -200,7 +189,12 @@ func sendTestsFinishedEvent(shkeptncontext string, incomingEvent cloudevents.Eve
 	source, _ := url.Parse("jmeter-service")
 	contentType := "application/json"
 
-	data := testFinishedEvent{Data: incomingEvent.Data, StartDate: incomingEvent.Context.GetTime()}
+	var testFinishedData interface{}
+	if err := incomingEvent.DataAs(&testFinishedData); err != nil {
+		utils.Error(shkeptncontext, fmt.Sprintf("Got Data Error: %s", err.Error()))
+		return err
+	}
+	testFinishedData.(map[string]interface{})["startdate"] = incomingEvent.Context.GetTime()
 
 	event := cloudevents.Event{
 		Context: cloudevents.EventContextV02{
@@ -210,7 +204,7 @@ func sendTestsFinishedEvent(shkeptncontext string, incomingEvent cloudevents.Eve
 			ContentType: &contentType,
 			Extensions:  map[string]interface{}{"shkeptncontext": shkeptncontext},
 		}.AsV02(),
-		Data: data,
+		Data: testFinishedData,
 	}
 
 	t, err := cloudeventshttp.New(
@@ -237,7 +231,12 @@ func sendEvaluationDoneEvent(shkeptncontext string, incomingEvent cloudevents.Ev
 	source, _ := url.Parse("jmeter-service")
 	contentType := "application/json"
 
-	data := evaluationDoneEvent{Data: incomingEvent.Data, EvaluationPassed: false}
+	var evaluationDoneData interface{}
+	if err := incomingEvent.DataAs(&evaluationDoneData); err != nil {
+		utils.Error(shkeptncontext, fmt.Sprintf("Got Data Error: %s", err.Error()))
+		return err
+	}
+	evaluationDoneData.(map[string]interface{})["evaluationpassed"] = false
 
 	event := cloudevents.Event{
 		Context: cloudevents.EventContextV02{
@@ -247,7 +246,7 @@ func sendEvaluationDoneEvent(shkeptncontext string, incomingEvent cloudevents.Ev
 			ContentType: &contentType,
 			Extensions:  map[string]interface{}{"shkeptncontext": shkeptncontext},
 		}.AsV02(),
-		Data: data,
+		Data: evaluationDoneData,
 	}
 
 	t, err := cloudeventshttp.New(
