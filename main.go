@@ -91,7 +91,7 @@ func runTests(event cloudevents.Event, shkeptncontext string, data deploymentFin
 	id := uuid.New().String()
 
 	var res bool
-	res, err = runHealthCheck(data, id)
+	res, err = runHealthCheck(shkeptncontext, data, id)
 	if err != nil {
 		utils.Error(shkeptncontext, err.Error())
 		return
@@ -105,7 +105,7 @@ func runTests(event cloudevents.Event, shkeptncontext string, data deploymentFin
 
 	switch strings.ToLower(data.TestStrategy) {
 	case "functional":
-		res, err = runFunctionalCheck(data, id)
+		res, err = runFunctionalCheck(shkeptncontext, data, id)
 		if err != nil {
 			utils.Error(shkeptncontext, err.Error())
 			return
@@ -113,7 +113,7 @@ func runTests(event cloudevents.Event, shkeptncontext string, data deploymentFin
 		utils.Info(shkeptncontext, "Functional test result ="+strconv.FormatBool(res))
 
 	case "performance":
-		res, err = runPerformanceCheck(data, id)
+		res, err = runPerformanceCheck(shkeptncontext, data, id)
 		if err != nil {
 			utils.Error(shkeptncontext, err.Error())
 			return
