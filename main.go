@@ -92,6 +92,7 @@ func runTests(event cloudevents.Event, shkeptncontext string, data deploymentFin
 		return
 	}
 
+	var sendEvent = false
 	switch strings.ToLower(data.TestStrategy) {
 	case "functional":
 		res, err = runFunctionalCheck(shkeptncontext, data, id)
@@ -100,6 +101,7 @@ func runTests(event cloudevents.Event, shkeptncontext string, data deploymentFin
 			return
 		}
 		utils.Info(shkeptncontext, "Functional test result ="+strconv.FormatBool(res))
+		sendEvent = true
 
 	case "performance":
 		res, err = runPerformanceCheck(shkeptncontext, data, id)
@@ -108,19 +110,25 @@ func runTests(event cloudevents.Event, shkeptncontext string, data deploymentFin
 			return
 		}
 		utils.Info(shkeptncontext, "Performance test result ="+strconv.FormatBool(res))
+		sendEvent = true
+
+	case "":
+		utils.Info(shkeptncontext, "No test strategy specified, hence no tests are triggered.")
 
 	default:
 		utils.Error(shkeptncontext, "Unknown test strategy '"+data.TestStrategy+"'")
 	}
 
-	if !res {
-		if err := sendEvaluationDoneEvent(shkeptncontext, event); err != nil {
-			utils.Error(shkeptncontext, fmt.Sprintf("Error sending evaluation done event: %s", err.Error()))
+	if sendEvent {
+		if !res {
+			if err := sendEvaluationDoneEvent(shkeptncontext, event); err != nil {
+				utils.Error(shkeptncontext, fmt.Sprintf("Error sending evaluation done event: %s", err.Error()))
+			}
+			return
 		}
-		return
-	}
-	if err := sendTestsFinishedEvent(shkeptncontext, event); err != nil {
-		utils.Error(shkeptncontext, fmt.Sprintf("Error sending test finished event: %s", err.Error()))
+		if err := sendTestsFinishedEvent(shkeptncontext, event); err != nil {
+			utils.Error(shkeptncontext, fmt.Sprintf("Error sending test finished event: %s", err.Error()))
+		}
 	}
 }
 
