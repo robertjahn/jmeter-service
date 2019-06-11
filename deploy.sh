@@ -1,3 +1,3 @@
 #!/bin/sh
-kubectl delete -f config/service.yaml --ignore-not-found
-kubectl apply -f config/service.yaml
+kubectl delete -f deploy/service.yaml --ignore-not-found
+kubectl apply -f deploy/service.yaml
