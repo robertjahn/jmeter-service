@@ -1,0 +1,34 @@
+apiVersion: serving.knative.dev/v1alpha1
+kind: Service
+metadata:
+  name: jmeter-service
+  namespace: keptn
+  labels:
+    serving.knative.dev/visibility: cluster-local
+spec:
+  runLatest:
+    configuration:
+      revisionTemplate:
+        metadata:
+          annotations:
+            autoscaling.knative.dev/minScale: "1"
+        spec:
+          container:
+            image: keptn/jmeter-service:latest
+            imagePullPolicy: Always
+---
+apiVersion: eventing.knative.dev/v1alpha1
+kind: Subscription
+metadata:
+  name: jmeter-service-deployment-finished-subscription
+  namespace: keptn
+spec:
+  channel:
+    apiVersion: eventing.knative.dev/v1alpha1
+    kind: Channel
+    name: deployment-finished
+  subscriber:
+    ref:
+      apiVersion: serving.knative.dev/v1alpha1
+      kind: Service
+      name: jmeter-service
