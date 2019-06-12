@@ -17,6 +17,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/kelseyhightower/envconfig"
 	"github.com/keptn/go-utils/pkg/utils"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 type envConfig struct {
@@ -188,8 +189,18 @@ func runPerformanceCheck(shkeptncontext string, data deploymentFinishedEvent, id
 }
 
 func getGatewayFromConfigmap() (string, error) {
-	return utils.ExecuteCommand("kubectl", []string{"get", "configmaps", "keptn-domain",
-		"--namespace", "keptn", "-ojsonpath={.data.app_domain}"})
+
+	api, err := utils.GetKubeAPI(true)
+	if err != nil {
+		return "", err
+	}
+
+	cm, err := api.ConfigMaps("keptn").Get("keptn-domain", metav1.GetOptions{})
+	if err != nil {
+		return "", err
+	}
+
+	return string(cm.Data["app_domain"]), nil
 }
 
 func sendTestsFinishedEvent(shkeptncontext string, incomingEvent cloudevents.Event) error {
