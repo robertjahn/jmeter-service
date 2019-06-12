@@ -136,15 +136,15 @@ func runTests(event cloudevents.Event, shkeptncontext string, data deploymentFin
 func runHealthCheck(shkeptncontext string, data deploymentFinishedEvent, id string) (bool, error) {
 	switch strings.ToLower(data.DeploymentStrategy) {
 	case "direct":
-		if err := utils.CheckDeploymentRolloutStatus(data.Service, data.Project+"-"+data.Stage); err != nil {
+		if err := utils.WaitForDeploymentToBeAvailable(true, data.Service, data.Project+"-"+data.Stage); err != nil {
 			return false, err
 		}
 
 	case "blue_green_service":
-		if err := utils.CheckDeploymentRolloutStatus(data.Service+"-blue", data.Project+"-"+data.Stage); err != nil {
+		if err := utils.WaitForDeploymentToBeAvailable(true, data.Service+"-blue", data.Project+"-"+data.Stage); err != nil {
 			return false, err
 		}
-		if err := utils.CheckDeploymentRolloutStatus(data.Service+"-green", data.Project+"-"+data.Stage); err != nil {
+		if err := utils.WaitForDeploymentToBeAvailable(true, data.Service+"-green", data.Project+"-"+data.Stage); err != nil {
 			return false, err
 		}
 
