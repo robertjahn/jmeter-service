@@ -46,10 +46,6 @@ RUN    apk update \
 # Set global PATH such that "jmeter" command is found
 ENV PATH $PATH:$JMETER_BIN
 
-ARG KUBE_VERSION=1.14.1
-RUN wget -q https://storage.googleapis.com/kubernetes-release/release/v$KUBE_VERSION/bin/linux/amd64/kubectl -O /bin/kubectl && \
-  chmod +x /bin/kubectl
-
 # Copy the binary to the production image from the builder stage.
 COPY --from=builder /go/src/github.com/keptn/jmeter-service/jmeter-service /jmeter-service
 ADD MANIFEST /
