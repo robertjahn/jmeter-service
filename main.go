@@ -213,7 +213,7 @@ func sendTestsFinishedEvent(shkeptncontext string, incomingEvent cloudevents.Eve
 		utils.Error(shkeptncontext, fmt.Sprintf("Got Data Error: %s", err.Error()))
 		return err
 	}
-	testFinishedData.(map[string]interface{})["startdat"] = incomingEvent.Context.GetTime()
+	testFinishedData.(map[string]interface{})["startedat"] = incomingEvent.Context.GetTime()
 
 	event := cloudevents.Event{
 		Context: cloudevents.EventContextV02{
