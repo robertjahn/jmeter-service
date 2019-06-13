@@ -9,6 +9,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/cloudevents/sdk-go/pkg/cloudevents"
 	"github.com/cloudevents/sdk-go/pkg/cloudevents/client"
@@ -94,6 +95,7 @@ func runTests(event cloudevents.Event, shkeptncontext string, data deploymentFin
 	}
 
 	var sendEvent = false
+	startedAt := time.Now()
 	switch strings.ToLower(data.TestStrategy) {
 	case "functional":
 		res, err = runFunctionalCheck(shkeptncontext, data, id)
@@ -127,7 +129,7 @@ func runTests(event cloudevents.Event, shkeptncontext string, data deploymentFin
 			}
 			return
 		}
-		if err := sendTestsFinishedEvent(shkeptncontext, event); err != nil {
+		if err := sendTestsFinishedEvent(shkeptncontext, event, startedAt); err != nil {
 			utils.Error(shkeptncontext, fmt.Sprintf("Error sending test finished event: %s", err.Error()))
 		}
 	}
@@ -203,7 +205,7 @@ func getGatewayFromConfigmap() (string, error) {
 	return string(cm.Data["app_domain"]), nil
 }
 
-func sendTestsFinishedEvent(shkeptncontext string, incomingEvent cloudevents.Event) error {
+func sendTestsFinishedEvent(shkeptncontext string, incomingEvent cloudevents.Event, startedAt time.Time) error {
 
 	source, _ := url.Parse("jmeter-service")
 	contentType := "application/json"
@@ -213,7 +215,7 @@ func sendTestsFinishedEvent(shkeptncontext string, incomingEvent cloudevents.Eve
 		utils.Error(shkeptncontext, fmt.Sprintf("Got Data Error: %s", err.Error()))
 		return err
 	}
-	testFinishedData.(map[string]interface{})["startdate"] = incomingEvent.Context.GetTime()
+	testFinishedData.(map[string]interface{})["startedat"] = startedAt
 
 	event := cloudevents.Event{
 		Context: cloudevents.EventContextV02{
