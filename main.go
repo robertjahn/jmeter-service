@@ -71,9 +71,9 @@ func gotEvent(ctx context.Context, event cloudevents.Event) error {
 
 func runTests(event cloudevents.Event, shkeptncontext string, data deploymentFinishedEvent) {
 
-	_, err := utils.Checkout(data.GitHubOrg, data.Service, "master")
+	_, err := utils.Checkout(data.GitHubOrg, data.Project, data.Stage)
 	if err != nil {
-		utils.Error(shkeptncontext, fmt.Sprintf("Error when checkingout from GitHub: %s", err.Error()))
+		utils.Error(shkeptncontext, fmt.Sprintf("Error when checking out from GitHub: %s", err.Error()))
 		return
 	}
 
@@ -103,7 +103,7 @@ func runTests(event cloudevents.Event, shkeptncontext string, data deploymentFin
 			utils.Error(shkeptncontext, err.Error())
 			return
 		}
-		utils.Info(shkeptncontext, "Functional test result ="+strconv.FormatBool(res))
+		utils.Info(shkeptncontext, "Functional test result = "+strconv.FormatBool(res))
 		sendEvent = true
 
 	case "performance":
@@ -112,7 +112,7 @@ func runTests(event cloudevents.Event, shkeptncontext string, data deploymentFin
 			utils.Error(shkeptncontext, err.Error())
 			return
 		}
-		utils.Info(shkeptncontext, "Performance test result ="+strconv.FormatBool(res))
+		utils.Info(shkeptncontext, "Performance test result = "+strconv.FormatBool(res))
 		sendEvent = true
 
 	case "":
@@ -158,7 +158,7 @@ func runHealthCheck(shkeptncontext string, data deploymentFinishedEvent, id stri
 	os.RemoveAll("HealthCheck_" + data.Service + "_result.tlf")
 	os.RemoveAll("output.txt")
 
-	return executeJMeter(shkeptncontext, data.Service+"/jmeter/basiccheck.jmx", "HealthCheck_"+data.Service,
+	return executeJMeter(shkeptncontext, getBasicCheckPath(data), "HealthCheck_"+data.Service,
 		data.Service+"."+data.Project+"-"+data.Stage, 80, "/health", 1, 1, 250, "HealthCheck_"+id,
 		true, 0)
 }
@@ -169,7 +169,7 @@ func runFunctionalCheck(shkeptncontext string, data deploymentFinishedEvent, id 
 	os.RemoveAll("FuncCheck_" + data.Service + "_result.tlf")
 	os.RemoveAll("output.txt")
 
-	return executeJMeter(shkeptncontext, data.Service+"/jmeter/"+data.Service+"_load.jmx",
+	return executeJMeter(shkeptncontext, getLoadTestPath(data),
 		"FuncCheck_"+data.Service, data.Service+"."+data.Project+"-"+data.Stage+".svc.cluster.local",
 		80, "/health", 1, 1, 250, "FuncCheck_"+id, true, 0)
 }
@@ -185,7 +185,7 @@ func runPerformanceCheck(shkeptncontext string, data deploymentFinishedEvent, id
 		return false, err
 	}
 
-	return executeJMeter(shkeptncontext, data.Service+"/jmeter/"+data.Service+"_load.jmx", "PerfCheck_"+data.Service,
+	return executeJMeter(shkeptncontext, getLoadTestPath(data), "PerfCheck_"+data.Service,
 		data.Service+"."+data.Project+"-"+data.Stage+"."+gateway, 80, "/health", 10, 500, 250, "PerfCheck_"+id,
 		false, 0)
 }
@@ -287,6 +287,18 @@ func sendEvaluationDoneEvent(shkeptncontext string, incomingEvent cloudevents.Ev
 		return errors.New("Failed to send cloudevent:, " + err.Error())
 	}
 	return nil
+}
+
+func getTestPathPrefix(data deploymentFinishedEvent) string {
+	return data.Project + "/" + data.Service + "/tests/jmeter/"
+}
+
+func getBasicCheckPath(data deploymentFinishedEvent) string {
+	return getTestPathPrefix(data) + "basiccheck.jmx"
+}
+
+func getLoadTestPath(data deploymentFinishedEvent) string {
+	return getTestPathPrefix(data) + data.Service + "_load.jmx"
 }
 
 func _main(args []string, env envConfig) int {
