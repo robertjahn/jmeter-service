@@ -23,7 +23,7 @@ import (
 
 type envConfig struct {
 	// Port on which to listen for cloudevents
-	Port int    `envconfig:"RCV_PORT" default:"8080"`
+	Port int    `envconfig:"RCV_PORT" default:"80"`
 	Path string `envconfig:"RCV_PATH" default:"/"`
 }
 
@@ -159,7 +159,7 @@ func runHealthCheck(shkeptncontext string, data deploymentFinishedEvent, id stri
 	os.RemoveAll("output.txt")
 
 	return executeJMeter(shkeptncontext, getBasicCheckPath(data), "HealthCheck_"+data.Service,
-		data.Service+"."+data.Project+"-"+data.Stage, 80, "/health", 1, 1, 250, "HealthCheck_"+id,
+		data.Service+"."+data.Project+"-"+data.Stage, 9080, "/health", 1, 1, 250, "HealthCheck_"+id,
 		true, 0)
 }
 
@@ -171,7 +171,7 @@ func runFunctionalCheck(shkeptncontext string, data deploymentFinishedEvent, id 
 
 	return executeJMeter(shkeptncontext, getLoadTestPath(data),
 		"FuncCheck_"+data.Service, data.Service+"."+data.Project+"-"+data.Stage+".svc.cluster.local",
-		80, "/health", 1, 1, 250, "FuncCheck_"+id, true, 0)
+		9080, "/health", 1, 1, 250, "FuncCheck_"+id, true, 0)
 }
 
 func runPerformanceCheck(shkeptncontext string, data deploymentFinishedEvent, id string) (bool, error) {
@@ -186,7 +186,7 @@ func runPerformanceCheck(shkeptncontext string, data deploymentFinishedEvent, id
 	}
 
 	return executeJMeter(shkeptncontext, getLoadTestPath(data), "PerfCheck_"+data.Service,
-		data.Service+"."+data.Project+"-"+data.Stage+"."+gateway, 80, "/health", 10, 500, 250, "PerfCheck_"+id,
+		data.Service+"."+data.Project+"-"+data.Stage+"."+gateway, 9080, "/health", 10, 500, 250, "PerfCheck_"+id,
 		false, 0)
 }
 
