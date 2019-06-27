@@ -50,8 +50,6 @@ func gotEvent(ctx context.Context, event cloudevents.Event) error {
 	var shkeptncontext string
 	event.Context.ExtensionAs("shkeptncontext", &shkeptncontext)
 
-	utils.Debug(shkeptncontext, fmt.Sprintf("Got Event Context: %+v", event.Context))
-
 	data := &deploymentFinishedEvent{}
 	if err := event.DataAs(data); err != nil {
 		utils.Error(shkeptncontext, fmt.Sprintf("Got Data Error: %s", err.Error()))
@@ -103,7 +101,7 @@ func runTests(event cloudevents.Event, shkeptncontext string, data deploymentFin
 			utils.Error(shkeptncontext, err.Error())
 			return
 		}
-		utils.Info(shkeptncontext, "Functional test result ="+strconv.FormatBool(res))
+		utils.Info(shkeptncontext, "Functional test result = "+strconv.FormatBool(res))
 		sendEvent = true
 
 	case "performance":
@@ -112,7 +110,7 @@ func runTests(event cloudevents.Event, shkeptncontext string, data deploymentFin
 			utils.Error(shkeptncontext, err.Error())
 			return
 		}
-		utils.Info(shkeptncontext, "Performance test result ="+strconv.FormatBool(res))
+		utils.Info(shkeptncontext, "Performance test result = "+strconv.FormatBool(res))
 		sendEvent = true
 
 	case "":
@@ -170,7 +168,7 @@ func runFunctionalCheck(shkeptncontext string, data deploymentFinishedEvent, id 
 	os.RemoveAll("output.txt")
 
 	return executeJMeter(shkeptncontext, data.Service+"/jmeter/"+data.Service+"_load.jmx",
-		"FuncCheck_"+data.Service, data.Service+"."+data.Project+"-"+data.Stage+".svc.cluster.local",
+		"FuncCheck_"+data.Service, data.Service+"."+data.Project+"-"+data.Stage,
 		80, "/health", 1, 1, 250, "FuncCheck_"+id, true, 0)
 }
 

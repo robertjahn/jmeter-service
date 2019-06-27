@@ -11,6 +11,8 @@ import (
 	"github.com/keptn/go-utils/pkg/utils"
 )
 
+const maxAcceptedErrorRate = 0.1
+
 func executeJMeter(shkeptncontext string, scriptName string, resultsDir string, serverURL string, serverPort int, checkPath string, vuCount int,
 	loopCount int, thinkTime int, LTN string, funcValidation bool, avgRtValidation int) (bool, error) {
 
@@ -43,7 +45,17 @@ func executeJMeter(shkeptncontext string, scriptName string, resultsDir string, 
 
 	space := regexp.MustCompile(`\s+`)
 	splits := strings.Split(space.ReplaceAllString(summary, " "), " ")
+	runs, err := strconv.Atoi(splits[2])
+	if err != nil {
+		return false, errors.New("Cannot parse jmeter-result")
+	}
+
 	errorCount, err := strconv.Atoi(splits[14])
+	if err != nil {
+		return false, errors.New("Cannot parse jmeter-result")
+	}
+
+	avg, err := strconv.Atoi(splits[8])
 	if err != nil {
 		return false, errors.New("Cannot parse jmeter-result")
 	}
@@ -53,9 +65,10 @@ func executeJMeter(shkeptncontext string, scriptName string, resultsDir string, 
 		return false, nil
 	}
 
-	avg, err := strconv.Atoi(splits[8])
-	if err != nil {
-		return false, errors.New("Cannot parse jmeter-result")
+	maxAcceptedErrors := maxAcceptedErrorRate * float64(runs)
+	if errorCount > int(maxAcceptedErrors) {
+		utils.Debug(shkeptncontext, fmt.Sprintf("jmeter test failed because we got a too high error rate of %.2f.", float64(errorCount)/float64(runs)))
+		return false, nil
 	}
 
 	if avgRtValidation > 0 && avg > avgRtValidation {
