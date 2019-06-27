@@ -168,7 +168,7 @@ func runFunctionalCheck(shkeptncontext string, data deploymentFinishedEvent, id 
 	os.RemoveAll("output.txt")
 
 	return executeJMeter(shkeptncontext, data.Service+"/jmeter/"+data.Service+"_load.jmx",
-		"FuncCheck_"+data.Service, data.Service+"."+data.Project+"-"+data.Stage+".svc.cluster.local",
+		"FuncCheck_"+data.Service, data.Service+"."+data.Project+"-"+data.Stage,
 		80, "/health", 1, 1, 250, "FuncCheck_"+id, true, 0)
 }
 
