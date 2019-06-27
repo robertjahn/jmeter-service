@@ -50,8 +50,6 @@ func gotEvent(ctx context.Context, event cloudevents.Event) error {
 	var shkeptncontext string
 	event.Context.ExtensionAs("shkeptncontext", &shkeptncontext)
 
-	utils.Debug(shkeptncontext, fmt.Sprintf("Got Event Context: %+v", event.Context))
-
 	data := &deploymentFinishedEvent{}
 	if err := event.DataAs(data); err != nil {
 		utils.Error(shkeptncontext, fmt.Sprintf("Got Data Error: %s", err.Error()))
@@ -103,7 +101,7 @@ func runTests(event cloudevents.Event, shkeptncontext string, data deploymentFin
 			utils.Error(shkeptncontext, err.Error())
 			return
 		}
-		utils.Info(shkeptncontext, "Functional test result ="+strconv.FormatBool(res))
+		utils.Info(shkeptncontext, "Functional test result = "+strconv.FormatBool(res))
 		sendEvent = true
 
 	case "performance":
@@ -112,7 +110,7 @@ func runTests(event cloudevents.Event, shkeptncontext string, data deploymentFin
 			utils.Error(shkeptncontext, err.Error())
 			return
 		}
-		utils.Info(shkeptncontext, "Performance test result ="+strconv.FormatBool(res))
+		utils.Info(shkeptncontext, "Performance test result = "+strconv.FormatBool(res))
 		sendEvent = true
 
 	case "":
