@@ -39,7 +39,7 @@
 
 [[constraint]]
   name = "github.com/keptn/go-utils"
-  branch = "develop"
+  version = "0.1.0"
   
 [[constraint]]
   name = "k8s.io/api"
