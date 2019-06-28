@@ -14,7 +14,7 @@ spec:
             autoscaling.knative.dev/minScale: "1"
         spec:
           container:
-            image: keptn/jmeter-service:0.1.0latest
+            image: keptn/jmeter-service:0.1.0
             imagePullPolicy: Always
 ---
 apiVersion: eventing.knative.dev/v1alpha1
