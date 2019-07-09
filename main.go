@@ -133,6 +133,10 @@ func runTests(event cloudevents.Event, shkeptncontext string, data deploymentFin
 	}
 }
 
+func getTestInfo(data deploymentFinishedEvent) string {
+	return "Project: "+data.Project+", Service: "+data.Service+", Stage: "+data.Stage+", TestStrategy: "+data.TestStrategy
+}
+
 func runHealthCheck(shkeptncontext string, data deploymentFinishedEvent, id string) (bool, error) {
 	switch strings.ToLower(data.DeploymentStrategy) {
 	case "direct":
@@ -156,7 +160,8 @@ func runHealthCheck(shkeptncontext string, data deploymentFinishedEvent, id stri
 	os.RemoveAll("HealthCheck_" + data.Service + "_result.tlf")
 	os.RemoveAll("output.txt")
 
-	return executeJMeter(shkeptncontext, data.Service+"/jmeter/basiccheck.jmx", "HealthCheck_"+data.Service,
+	testInfo := getTestInfo(data)
+	return executeJMeter(testInfo, shkeptncontext, data.Service+"/jmeter/basiccheck.jmx", "HealthCheck_"+data.Service,
 		data.Service+"."+data.Project+"-"+data.Stage, 80, "/health", 1, 1, 250, "HealthCheck_"+id,
 		true, 0)
 }
@@ -167,7 +172,8 @@ func runFunctionalCheck(shkeptncontext string, data deploymentFinishedEvent, id 
 	os.RemoveAll("FuncCheck_" + data.Service + "_result.tlf")
 	os.RemoveAll("output.txt")
 
-	return executeJMeter(shkeptncontext, data.Service+"/jmeter/"+data.Service+"_load.jmx",
+	testInfo := getTestInfo(data)
+	return executeJMeter(testInfo, shkeptncontext, data.Service+"/jmeter/"+data.Service+"_load.jmx",
 		"FuncCheck_"+data.Service, data.Service+"."+data.Project+"-"+data.Stage,
 		80, "/health", 1, 1, 250, "FuncCheck_"+id, true, 0)
 }
@@ -183,7 +189,8 @@ func runPerformanceCheck(shkeptncontext string, data deploymentFinishedEvent, id
 		return false, err
 	}
 
-	return executeJMeter(shkeptncontext, data.Service+"/jmeter/"+data.Service+"_load.jmx", "PerfCheck_"+data.Service,
+	testInfo := getTestInfo(data)
+	return executeJMeter(testInfo, shkeptncontext, data.Service+"/jmeter/"+data.Service+"_load.jmx", "PerfCheck_"+data.Service,
 		data.Service+"."+data.Project+"-"+data.Stage+"."+gateway, 80, "/health", 10, 500, 250, "PerfCheck_"+id,
 		false, 0)
 }

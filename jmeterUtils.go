@@ -13,13 +13,13 @@ import (
 
 const maxAcceptedErrorRate = 0.1
 
-func executeJMeter(shkeptncontext string, scriptName string, resultsDir string, serverURL string, serverPort int, checkPath string, vuCount int,
+func executeJMeter(testInfo string, shkeptncontext string, scriptName string, resultsDir string, serverURL string, serverPort int, checkPath string, vuCount int,
 	loopCount int, thinkTime int, LTN string, funcValidation bool, avgRtValidation int) (bool, error) {
 
 	os.RemoveAll(resultsDir)
 	os.MkdirAll(resultsDir, 0644)
 
-	utils.Debug(shkeptncontext, "Starting JMeter test")
+	utils.Debug(shkeptncontext, "Starting JMeter test. "+testInfo)
 	res, err := utils.ExecuteCommand("jmeter", []string{"-n", "-t", "./" + scriptName,
 		// "-e", "-o", resultsDir,
 		"-l", resultsDir + "_result.tlf",
@@ -40,43 +40,43 @@ func executeJMeter(shkeptncontext string, scriptName string, resultsDir string, 
 	// Parse result
 	summary := getLastOccurence(strings.Split(res, "\n"), "summary =")
 	if summary == "" {
-		return false, errors.New("Cannot parse jmeter-result")
+		return false, errors.New("Cannot parse jmeter-result. "+testInfo)
 	}
 
 	space := regexp.MustCompile(`\s+`)
 	splits := strings.Split(space.ReplaceAllString(summary, " "), " ")
 	runs, err := strconv.Atoi(splits[2])
 	if err != nil {
-		return false, errors.New("Cannot parse jmeter-result")
+		return false, errors.New("Cannot parse jmeter-result. "+testInfo)
 	}
 
 	errorCount, err := strconv.Atoi(splits[14])
 	if err != nil {
-		return false, errors.New("Cannot parse jmeter-result")
+		return false, errors.New("Cannot parse jmeter-result. "+testInfo)
 	}
 
 	avg, err := strconv.Atoi(splits[8])
 	if err != nil {
-		return false, errors.New("Cannot parse jmeter-result")
+		return false, errors.New("Cannot parse jmeter-result. "+testInfo)
 	}
 
 	if funcValidation && errorCount > 0 {
-		utils.Debug(shkeptncontext, fmt.Sprintf("Function validation failed because we got %d errors.", errorCount))
+		utils.Debug(shkeptncontext, fmt.Sprintf("Function validation failed because we got %d errors.", errorCount)+". "+testInfo)
 		return false, nil
 	}
 
 	maxAcceptedErrors := maxAcceptedErrorRate * float64(runs)
 	if errorCount > int(maxAcceptedErrors) {
-		utils.Debug(shkeptncontext, fmt.Sprintf("jmeter test failed because we got a too high error rate of %.2f.", float64(errorCount)/float64(runs)))
+		utils.Debug(shkeptncontext, fmt.Sprintf("jmeter test failed because we got a too high error rate of %.2f.", float64(errorCount)/float64(runs))+". "+testInfo)
 		return false, nil
 	}
 
 	if avgRtValidation > 0 && avg > avgRtValidation {
-		utils.Debug(shkeptncontext, fmt.Sprintf("Avg rt validation failed because we got an avg rt of %d", avgRtValidation))
+		utils.Debug(shkeptncontext, fmt.Sprintf("Avg rt validation failed because we got an avg rt of %d", avgRtValidation)+". "+testInfo)
 		return false, nil
 	}
 
-	utils.Debug(shkeptncontext, "Successfully executed JMeter test")
+	utils.Debug(shkeptncontext, "Successfully executed JMeter test. "+testInfo)
 	return true, nil
 }
 
