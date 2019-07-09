@@ -75,8 +75,7 @@ func runTests(event cloudevents.Event, shkeptncontext string, data deploymentFin
 		return
 	}
 
-	utils.Info(shkeptncontext, "Running tests with jmeter")
-
+	testInfo := getTestInfo(data)
 	id := uuid.New().String()
 
 	var res bool
@@ -91,6 +90,7 @@ func runTests(event cloudevents.Event, shkeptncontext string, data deploymentFin
 		}
 		return
 	}
+	utils.Info(shkeptncontext, "Heath Check test passed = "+strconv.FormatBool(res)+". "+testInfo)
 
 	var sendEvent = false
 	startedAt := time.Now()
@@ -101,7 +101,7 @@ func runTests(event cloudevents.Event, shkeptncontext string, data deploymentFin
 			utils.Error(shkeptncontext, err.Error())
 			return
 		}
-		utils.Info(shkeptncontext, "Functional test result = "+strconv.FormatBool(res))
+		utils.Info(shkeptncontext, "Functional test passed = "+strconv.FormatBool(res)+". "+testInfo)
 		sendEvent = true
 
 	case "performance":
@@ -110,25 +110,25 @@ func runTests(event cloudevents.Event, shkeptncontext string, data deploymentFin
 			utils.Error(shkeptncontext, err.Error())
 			return
 		}
-		utils.Info(shkeptncontext, "Performance test result = "+strconv.FormatBool(res))
+		utils.Info(shkeptncontext, "Performance test passed = "+strconv.FormatBool(res)+". "+testInfo)
 		sendEvent = true
 
 	case "":
-		utils.Info(shkeptncontext, "No test strategy specified, hence no tests are triggered.")
+		utils.Info(shkeptncontext, "No test strategy specified, hence no tests are triggered. "+testInfo)
 
 	default:
-		utils.Error(shkeptncontext, "Unknown test strategy '"+data.TestStrategy+"'")
+		utils.Error(shkeptncontext, "Unknown test strategy '"+data.TestStrategy+"'"+". "+testInfo)
 	}
 
 	if sendEvent {
 		if !res {
 			if err := sendEvaluationDoneEvent(shkeptncontext, event); err != nil {
-				utils.Error(shkeptncontext, fmt.Sprintf("Error sending evaluation done event: %s", err.Error()))
+				utils.Error(shkeptncontext, fmt.Sprintf("Error sending evaluation done event: %s", err.Error())+". "+testInfo)
 			}
 			return
 		}
 		if err := sendTestsFinishedEvent(shkeptncontext, event, startedAt); err != nil {
-			utils.Error(shkeptncontext, fmt.Sprintf("Error sending test finished event: %s", err.Error()))
+			utils.Error(shkeptncontext, fmt.Sprintf("Error sending test finished event: %s", err.Error())+". "+testInfo)
 		}
 	}
 }

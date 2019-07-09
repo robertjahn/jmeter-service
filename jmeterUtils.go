@@ -19,6 +19,7 @@ func executeJMeter(testInfo string, shkeptncontext string, scriptName string, re
 	os.RemoveAll(resultsDir)
 	os.MkdirAll(resultsDir, 0644)
 
+	testInfo = testInfo+", scriptName: "+scriptName+", serverURL: "+serverURL
 	utils.Debug(shkeptncontext, "Starting JMeter test. "+testInfo)
 	res, err := utils.ExecuteCommand("jmeter", []string{"-n", "-t", "./" + scriptName,
 		// "-e", "-o", resultsDir,
